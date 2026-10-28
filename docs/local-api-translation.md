@@ -2,6 +2,8 @@
 
 基于上游稳定版本 v0.14.0；非上游官方发行版。不会改写原 PDF。
 
+`0.14.0-api.20261029.1`：编译内置 798 条 PCB 公共词库，干净安装无需导入；本机补充独立保留。详见 [公共词库](local-public-pcb-glossary.md)。
+
 ## 设置与使用
 
 1. 点击顶部「API 设置」，填写服务商基础地址、文字模型 ID、API Key。窄窗口下，翻译按钮集中在顶部「API 翻译」菜单，不挤占原来的页面区域。可选择 GPT / OpenAI、MiniMax、DeepSeek、Kimi、小米 MiMo 或自定义兼容 API；协议支持 Chat Completions / Responses。预设不代表账号权限或所有厂商专有协议兼容。
@@ -15,7 +17,7 @@
 
 本机 PCB 词库按最长词组和英文边界匹配，多义词结合语境，已知错误词对隔离。不连接旧翻译网站。图片识别之后，只把识别原文命中的术语发送给文字模型。保留压合/lamination、芯板/core、叠层/stack-up 的行业提示，并检查数字改变、明显的压合/press-fit 误译和无来源附件声明；这些检查不能代替专业审校。
 
-词库缓存为用户配置目录内的 `pcb-glossary.json`，公开安装包/源码不包含个人词库。默认位置：Mac `~/Library/Application Support/PdfCraftAPI/`；Windows `%APPDATA%/PdfCraftAPI/`。本机同步导入的词库无需用户手动操作。
+公开包内置 `pcb-glossary-public.json`。个人词库缓存为用户配置目录内的 `pcb-glossary.json`，不会公开分发。默认位置：Mac `~/Library/Application Support/PdfCraftAPI/`；Windows `%APPDATA%/PdfCraftAPI/`。无需手动导入公共词库，原个人文件保留。
 
 API Key 默认仅本次运行，勾选记住后存放于系统密钥存储；普通 JSON 不保存密钥。默认只允许 HTTPS（本机 HTTP 例外），远程 HTTP 必须明确允许；不跟随重定向，不自动重试。服务商可看到发送的内容，数据保留规则以该服务商为准。
 
@@ -23,6 +25,8 @@ API Key 默认仅本次运行，勾选记住后存放于系统密钥存储；普
 
 `api_selection_text` 准备真实 glyph 范围，`api_selection_image` 生成裁剪预览，均不联网。`api_translate` 每次必须显式传 `allow_api_send:true`，用传入 profile 和 `api_key_env`；不会自动读取桌面的密钥或词库。可选 `glossary_path` 受 `--root` 限制。详见 CLI tools。
 
-目前验证使用合成 PDF 和本机模拟 API，不使用业务文档，也不调用真实付费模型。Mac 版本临时签名、未公证。本次仅生成本机定制版，尚未创建 PDFCraft 的公开 GitHub 仓库。
+目前验证使用合成 PDF 和本机模拟 API，不使用业务文档，也不调用真实付费模型。Mac 版本临时签名、未公证。独立公开仓库为 [PdfCraft-API-Edition](https://github.com/lain-creator/PdfCraft-API-Edition)，安装包见该仓库 Releases；本版首发 Mac arm64 包，不把上游其他平台能力当作已发布的安装包。
 
 本机 arm64 打包使用 `cargo xtask local-api-package`，保留上游离线 OCR 模型和许可。下载不可用时可设置 `PDFCRAFT_MODELS_DIR` 指向模型缓存；模型和许可必须逐个匹配 `ATTRIBUTION.toml` 的固定 SHA-256，否则拒绝打包。不拷贝旧安装中的其他文件或个人设置。
+
+Mac Intel CI 可设置 `PDFCRAFT_PACKAGE_BINARY` 指向交叉构建的 arm64 可执行文件；打包前检查 Mach-O 架构，避免错标平台。

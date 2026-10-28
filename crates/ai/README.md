@@ -13,6 +13,8 @@ translation, and model warnings. Each request may incur fees.
 Settings are under PdfCraftAPI, separately from upstream preferences. API keys are omitted from
 JSON and are session-only by default; explicit persistence uses macOS Keychain / Windows
 Credential Manager. No real credentials or personal glossary data belong in the repository.
+The curated 798-pair public PCB base, including user-authorized personal PCB terms, is embedded in every binary; clean
+installs use it without personal files. User additions are merged in memory, not rewritten.
 Native request files live in a private temporary directory, redirects are refused, input and
 response sizes are bounded, errors are sanitized, cancellation stops local waiting, and requests
 are never automatically retried. Providers may still process requests after cancellation.

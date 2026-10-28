@@ -71,9 +71,9 @@ impl Automation {
             use std::io::Read;
             let mut bytes = Vec::new();
             file.take(4 * 1024 * 1024 + 1).read_to_end(&mut bytes).map_err(failed)?;
-            pdfcraft_ai::pcb_glossary::Glossary::parse(&bytes).map_err(failed)?
+            pdfcraft_ai::pcb_glossary::Glossary::with_local(pdfcraft_ai::pcb_glossary::Glossary::parse(&bytes).map_err(failed)?).map_err(failed)?
         } else {
-            pdfcraft_ai::pcb_glossary::Glossary::default()
+            pdfcraft_ai::pcb_glossary::Glossary::builtin().map_err(failed)?
         };
         #[cfg(not(target_arch = "wasm32"))]
         let result = pdfcraft_ai::translation::translate_with(

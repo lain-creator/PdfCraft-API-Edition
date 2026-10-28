@@ -1,6 +1,8 @@
 # PDFCraft API Translation Edition
 
-基于上游稳定版 v0.14.0 的本机定制版；支持自定义第三方 API、PDF 文字选区翻译、框选图片识别后翻译、「中译英 / 英译中」弹窗结果和本机 PCB 专业词库。点击翻译才发送内容，不修改原 PDF。详见 [API 翻译说明](docs/local-api-translation.md)。非上游官方发行版；原作者及开源许可保留，按上游要求移除其限制用于改版的商标图案。
+基于上游稳定版 v0.14.0 的独立 API 专业词汇版；支持自定义第三方 API、PDF 文字选区翻译、框选图片识别后翻译和「中译英 / 英译中」弹窗结果。内置 798 条 PCB 术语，包含用户授权公开的个人 PCB 补充词汇，无需手动导入。点击翻译才发送内容，不修改原 PDF。详见 [API 翻译说明](docs/local-api-translation.md)。非上游官方发行版；原作者及开源许可保留，按上游要求移除其限制用于改版的商标图案。
+
+[下载 API 专业词汇版](https://github.com/lain-creator/PdfCraft-API-Edition/releases/latest) · [公共词库说明](docs/local-public-pcb-glossary.md)。本仓库首发安装包为 Apple Silicon Mac arm64；下方跨平台介绍是上游能力，不代表本版已发布所有平台安装包。
 
 
 <p align="center">

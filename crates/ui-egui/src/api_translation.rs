@@ -396,9 +396,9 @@ impl PdfCraftApp {
                     });
                 }
                 ui.separator();
-                ui.label("PCB 专业术语库 (本机)");
+                ui.label("PCB 专业术语库 (内置 + 本机补充)");
                 ui.label(&state.glossary);
-                ui.small("只发送命中的术语；词库不依赖原网站，不包含在公开程序包中。");
+                ui.small("公开包内置 798 条 PCB 术语；本机词库独立保留。只发送命中词条，不依赖原网站。");
                 if ui.button("刷新词库状态").clicked() {
                     refresh = true;
                 }

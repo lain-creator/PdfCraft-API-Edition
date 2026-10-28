@@ -175,6 +175,22 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
     #[test]
+    fn built_in_public_terms_reach_translation_without_personal_files() {
+        let glossary = Glossary::builtin().unwrap();
+        let complete = |_: Profile, messages: Vec<Message>, _: &AtomicBool| {
+            let data: serde_json::Value = serde_json::from_str(messages[1].content.as_str().unwrap()).unwrap();
+            let terms = data["pcb_glossary"].as_array().unwrap();
+            assert!(terms.iter().any(|term| term["en"] == "Lamination structure"));
+            assert!(terms.len() < 10, "only matched terms, not the entire public glossary");
+            assert!(!terms.iter().any(|term| term["en"] == "Pad"));
+            Ok(json!({"translation":"Lamination structure 1.6mm","notes":""}).to_string())
+        };
+        let result =
+            translate_with(Source::Text("压合结构1.6mm".into()), Direction::ZhEn, Profile::default(), &glossary, &AtomicBool::new(false), &complete)
+                .unwrap();
+        assert!(result.matched_terms > 0);
+    }
+    #[test]
     fn cancelling_after_ocr_does_not_issue_the_translation_call() {
         let cancel = AtomicBool::new(false);
         let calls = std::sync::atomic::AtomicUsize::new(0);

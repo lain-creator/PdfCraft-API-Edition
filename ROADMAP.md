@@ -1,5 +1,7 @@
 # PdfCraft roadmap
 
+> **Local API edition update: 2026-10-29** · 798 curated public PCB pairs, including user-authorized personal PCB terms, are embedded in binaries and public packages. Clean installs need no imported glossary; local additions remain separate and are merged in memory. No change to upstream parity estimates. See [public glossary](docs/local-public-pcb-glossary.md).
+
 **Stage: alpha** · next: beta, ~25% (ready for real work 50% → 75%) and ~400–700 h away
 
 > **Last reviewed:** 2026-10-23 | **Last updated:** 2026-10-23 | **Change:** minor (M8, #3205 follow-up: labelled Italian international phone numbers with a slash match whole; estimates unchanged)

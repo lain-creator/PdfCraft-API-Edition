@@ -112,7 +112,7 @@ impl GlossaryInfo {
             "未导入本机 PCB 词库.".into()
         } else {
             format!(
-                "已导入 {} 条; {} 条待核对不参与匹配, {} 组多义词按上下文判断. 来源: {}",
+                "已启用 {} 条; {} 条待核对不参与匹配, {} 组多义词按上下文判断. 来源: {}",
                 self.entries, self.quarantined, self.ambiguous, self.source
             )
         }

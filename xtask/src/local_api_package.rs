@@ -1,19 +1,23 @@
-//! Local Mac-only packaging. No installer registrations, user files, keys or glossary data.
+//! Mac arm64 packaging (native or cross-built). Personal configuration is never included.
 use anyhow::{Context, Result, bail};
 use std::{fs, io::Read, path::Path, process::Command};
 pub fn run(args: &[String]) -> Result<()> {
-    let version = args.first().map(String::as_str).unwrap_or("0.14.0-api.20261028.1");
+    let version = args.first().map(String::as_str).unwrap_or("0.14.0-api.20261029.1");
     if args.len() > 1 || version.is_empty() || !version.bytes().all(|c| c.is_ascii_alphanumeric() || b".-".contains(&c)) {
         bail!("expected one safe package version");
     }
-    if !cfg!(all(target_os = "macos", target_arch = "aarch64")) {
-        bail!("local-api-package currently supports native macOS arm64 only");
+    if !cfg!(target_os = "macos") {
+        bail!("local-api-package requires macOS signing tools");
     }
     let root = crate::gates::root();
     let target = std::env::var_os("CARGO_TARGET_DIR").map(std::path::PathBuf::from).unwrap_or_else(|| root.join("target"));
-    let binary = target.join("release/pdfcraft");
+    let binary = std::env::var_os("PDFCRAFT_PACKAGE_BINARY").map(std::path::PathBuf::from).unwrap_or_else(|| target.join("release/pdfcraft"));
     if !binary.is_file() {
         bail!("build cargo build --release -p pdfcraft first");
+    }
+    let architectures = Command::new("/usr/bin/lipo").arg("-archs").arg(&binary).output()?;
+    if !architectures.status.success() || String::from_utf8_lossy(&architectures.stdout).trim() != "arm64" {
+        bail!("the macos-arm64 package requires an arm64 Mach-O executable");
     }
     let output = root.join("dist");
     fs::create_dir_all(&output)?;
@@ -53,6 +57,7 @@ pub fn run(args: &[String]) -> Result<()> {
             fs::copy(root.join(name), resources.join(name))?;
         }
         fs::copy(root.join("docs/local-api-translation.md"), resources.join("API翻译使用说明.md"))?;
+        fs::copy(root.join("assets/pcb-glossary-public.json"), resources.join("pcb-glossary-public.json"))?;
         let fonts = std::env::var_os("CRAFT_FONTS_DIR").context("CRAFT_FONTS_DIR is required for the local Chinese edition")?;
         let fonts = Path::new(&fonts);
         fs::copy(fonts.join("ATTRIBUTION.md"), resources.join("craft-fonts-ATTRIBUTION.md"))?;
