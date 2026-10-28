@@ -1,6 +1,6 @@
 //! Local Mac-only packaging. No installer registrations, user files, keys or glossary data.
 use anyhow::{Context, Result, bail};
-use std::{fs, path::Path, process::Command};
+use std::{fs, io::Read, path::Path, process::Command};
 pub fn run(args: &[String]) -> Result<()> {
     let version = args.first().map(String::as_str).unwrap_or("0.14.0-api.20261028.1");
     if args.len() > 1 || version.is_empty() || !version.bytes().all(|c| c.is_ascii_alphanumeric() || b".-".contains(&c)) {
@@ -67,9 +67,25 @@ pub fn run(args: &[String]) -> Result<()> {
                 fs::copy(entry.path(), resources.join(entry.file_name()))?;
             }
         }
-        // Use the upstream manifest's pinned model/license downloader, never
-        // unverified resources copied from a previous installed application.
-        crate::assets::models(&[resources.join("models").to_string_lossy().into_owned()])?;
+        let models = resources.join("models");
+        // An explicitly supplied offline cache may be an existing installation.
+        // Only manifest-named files whose exact hashes match are copied; keys,
+        // settings and unrelated app resources are never included.
+        if let Some(cache) = std::env::var_os("PDFCRAFT_MODELS_DIR") {
+            fs::create_dir(&models)?;
+            let manifest = crate::assets::load(&root)?;
+            for model in manifest.fetched.iter().filter(|m| m.kind == "model") {
+                for (file, hash) in
+                    [(model.file.clone(), model.sha256.as_str()), (format!("{}.LICENCE.txt", model.file), model.licence_sha256.as_str())]
+                {
+                    let path = Path::new(&cache).join(&file);
+                    let bytes = verified_bytes(fs::File::open(&path).with_context(|| format!("reading {}", path.display()))?, hash, 64 << 20)?;
+                    fs::write(models.join(file), bytes)?;
+                }
+            }
+        }
+        // Re-verifies every model/license and generates the required attribution.
+        crate::assets::models(&[models.to_string_lossy().into_owned()])?;
         check(Command::new("/usr/bin/xattr").args(["-cr"]).arg(&app))?;
         check(Command::new("/usr/bin/codesign").args(["--force", "--deep", "--sign", "-"]).arg(&app))?;
         check(Command::new("/usr/bin/codesign").args(["--verify", "--deep", "--strict"]).arg(&app))?;
@@ -82,10 +98,30 @@ pub fn run(args: &[String]) -> Result<()> {
     cleaned?;
     Ok(())
 }
+fn verified_bytes(reader: impl Read, sha256: &str, limit: u64) -> Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    reader.take(limit.saturating_add(1)).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > limit || crate::assets::sha256_hex(&bytes) != sha256 {
+        bail!("cached model/license is oversized or does not match the pinned manifest hash");
+    }
+    Ok(bytes)
+}
 fn check(command: &mut Command) -> Result<()> {
     let status = command.status()?;
     if !status.success() {
         bail!("packaging command failed: {status}");
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn cached_resources_are_bounded_and_hash_verified_before_packaging() {
+        let hash = crate::assets::sha256_hex(b"test-model");
+        assert_eq!(verified_bytes(&b"test-model"[..], &hash, 10).unwrap(), b"test-model");
+        assert!(verified_bytes(&b"changed"[..], &hash, 10).is_err());
+        assert!(verified_bytes(&b"test-model"[..], &hash, 9).is_err());
+    }
 }

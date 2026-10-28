@@ -24,3 +24,5 @@ API Key 默认仅本次运行，勾选记住后存放于系统密钥存储；普
 `api_selection_text` 准备真实 glyph 范围，`api_selection_image` 生成裁剪预览，均不联网。`api_translate` 每次必须显式传 `allow_api_send:true`，用传入 profile 和 `api_key_env`；不会自动读取桌面的密钥或词库。可选 `glossary_path` 受 `--root` 限制。详见 CLI tools。
 
 目前验证使用合成 PDF 和本机模拟 API，不使用业务文档，也不调用真实付费模型。Mac 版本临时签名、未公证。本次仅生成本机定制版，尚未创建 PDFCraft 的公开 GitHub 仓库。
+
+本机 arm64 打包使用 `cargo xtask local-api-package`，保留上游离线 OCR 模型和许可。下载不可用时可设置 `PDFCRAFT_MODELS_DIR` 指向模型缓存；模型和许可必须逐个匹配 `ATTRIBUTION.toml` 的固定 SHA-256，否则拒绝打包。不拷贝旧安装中的其他文件或个人设置。
