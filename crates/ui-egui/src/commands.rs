@@ -547,6 +547,16 @@ impl PdfCraftApp {
                 }
             }
             "view.marquee_zoom" => self.quick_tool = crate::QuickTool::MarqueeZoom,
+            "api.settings" => self.open_api_settings(),
+            "api.text" => {
+                self.quick_tool = crate::QuickTool::Select;
+            }
+            "api.image" => {
+                self.quick_tool = crate::QuickTool::TranslateImage;
+                self.notify("请在 PDF 页面中拖动框选图片区域，预览后点击中译英或英译中。");
+            }
+            "api.zh_en" => self.translate_api_selection(pdfcraft_ai::translation::Direction::ZhEn),
+            "api.en_zh" => self.translate_api_selection(pdfcraft_ai::translation::Direction::EnZh),
             "edit.column_select" => self.quick_tool = crate::QuickTool::ColumnSelect,
             "edit.snapshot" => {
                 self.quick_tool = crate::QuickTool::Snapshot;

@@ -17,6 +17,8 @@ Approved Trust List) are out of scope: 23 such features are tracked as `na` in
 
 ## Headline
 
+Local API Translation Edition (2026-10-28) adds selected text/crop translation through user-supplied compatible APIs. This limited, mock-tested provider slice is tracked as partial in the local checklist; the upstream headline percentages and readiness estimates below are not recalculated or claimed to improve.
+
 | | Value | Kind |
 |---|---|---|
 | **Feature breadth**, tier-weighted | **≈ 67%** | measured (checklist; weights below) |

@@ -9601,11 +9601,11 @@ title = "AI provider interface (local model or own endpoint), off by default"
 area = "N"
 tier = "P2"
 milestone = "M13"
-status = "planned"
-commands = []
-tools = []
-evidence = []
-notes = ""
+status = "partial"
+commands = ["api.settings", "api.text", "api.image", "api.zh_en", "api.en_zh"]
+tools = ["api_selection_text", "api_selection_image", "api_translate"]
+evidence = ["crates/automation/tests/it/api_translation.rs::api_translation_text_image_permissions_confinement_and_unchanged_document"]
+notes = "Custom API Translation Edition: opt-in text/crop translation with editable compatible endpoints and a local PCB glossary, no PDF edits. Image mode explicitly uses vision OCR plus text translation. Mock-tested only, no live-provider or universal model compatibility claim. Summarize/ask/alt-text/redaction assistance remain unimplemented; upstream parity estimates unchanged."
 
 [[feature]]
 id = "misc.ai-summary"

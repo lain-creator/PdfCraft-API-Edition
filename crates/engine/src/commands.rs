@@ -163,6 +163,11 @@ const HELP: Option<&str> = Some("Help");
 
 /// Every command, in menu order.
 pub const COMMANDS: &[CommandSpec] = &[
+    c("api.settings", "API 设置", None, None, Nothing, "settings"),
+    c("api.text", "文字选区", None, None, Copying, "text-select"),
+    c("api.image", "图片框选", None, None, Copying, "scan"),
+    c("api.zh_en", "中译英", None, None, Copying, "languages"),
+    c("api.en_zh", "英译中", None, None, Copying, "languages"),
     c("file.open", "Open…", FILE, Some(Shortcut::cmd("O")), Nothing, "folder-open"),
     c("file.open_recent", "Open Recent", FILE, None, Nothing, "clock"),
     // Shown at the foot of File ▸ Open Recent and on Home, not as its own File menu item.

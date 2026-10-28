@@ -314,10 +314,8 @@ mod tests {
         assert_eq!(document_hebrew_font(false).is_some(), CRAFT_FONTS.iter().any(|f| f.covers("Hebr")));
     }
 
-    /// `build.rs` embeds the Japanese CJK faces whole and any other CJK face only up to
-    /// `MAX_OTHER_CJK_BYTES`, so a checkout with a large Chinese or Korean face (craft-fonts has the
-    /// 16.4 MB Noto Sans CJK SC) leaves it out. The four Japanese faces of the pinned craft-fonts
-    /// are 24.1 MB.
+    /// The native API edition explicitly retains one 16.4 MB Simplified Chinese face.
+    /// Other CJK faces still obey the upstream size cap; wasm retains no whole SC face.
     #[test]
     fn cjk_faces_follow_the_size_rule() {
         use crate::cjk_scripts::{MAX_OTHER_CJK_BYTES, WHOLE_CJK_FAMILIES, is_cjk_script};
@@ -328,6 +326,14 @@ mod tests {
         let (whole, other): (Vec<_>, Vec<_>) = cjk.partition(|f| WHOLE_CJK_FAMILIES.contains(&f.family));
         for face in &other {
             let len = face.bytes.len();
+            if !cfg!(target_arch = "wasm32") && face.family == "Noto Sans CJK SC" {
+                assert!(len < 17_000_000, "Chinese desktop face exceeds its explicit budget");
+                assert!(face.covers("Hans"));
+                for ch in ['译', '压', '合', '芯', '铜'] {
+                    assert!(crate::japanese_glyph_from(face, ch).is_ok(), "missing Chinese interface glyph {ch}");
+                }
+                continue;
+            }
             assert!(u64::try_from(len).is_ok_and(|n| n <= MAX_OTHER_CJK_BYTES), "{} is embedded at {len} bytes", face.name());
         }
         let bytes: usize = whole.iter().map(|f| f.bytes.len()).sum();

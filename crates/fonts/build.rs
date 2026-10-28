@@ -1,4 +1,5 @@
 //! Embeds the fonts of the optional craft-fonts build input (`CRAFT_FONTS_DIR`) as `CRAFT_FONTS`.
+//! This native API edition also retains Noto Sans CJK SC for readable Chinese popups; never on wasm.
 //! The recipe is craft-fonts' `docs/integration.md`; unset, `CRAFT_FONTS` is empty. It only reads
 //! the local checkout (no network). On wasm32 it embeds only the UI faces (BIZ UDPGothic Regular
 //! and any `Arab`, `Telu`, `Hebr`, `Thai` or `Deva` face), to keep the web build within hosting
@@ -47,6 +48,7 @@ fn craft_fonts(dir: &std::path::Path) -> Result<String, String> {
         let cjk = scripts.split(',').any(cjk_scripts::is_cjk_script);
         if cjk
             && !cjk_scripts::WHOLE_CJK_FAMILIES.contains(family)
+            && (*family != "Noto Sans CJK SC" || wasm)
             && std::fs::metadata(dir.join(file)).is_ok_and(|m| m.len() > cjk_scripts::MAX_OTHER_CJK_BYTES)
         {
             continue;

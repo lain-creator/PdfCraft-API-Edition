@@ -15,6 +15,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 mod a11y;
+mod api_translation;
 mod batch;
 mod comments;
 mod content;
@@ -211,6 +212,9 @@ impl Automation {
         tools::check_args(def, args)?;
         let a = Args(args);
         let out = match name {
+            "api_selection_text" => self.api_selection_text(&a)?,
+            "api_selection_image" => return self.api_selection_image(&a),
+            "api_translate" => self.api_translate(&a)?,
             "doc_open" => self.doc_open(&a)?,
             "doc_batch" => self.doc_batch(&a)?,
             "doc_list" => json!({ "documents": self.session.docs().iter().map(summary).collect::<Vec<_>>() }),

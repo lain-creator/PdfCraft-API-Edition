@@ -10,6 +10,7 @@ rust-version = "1.95"
 workspace = true
 
 [dependencies]
+pdfcraft-ai = { workspace = true }
 craft-ui = { workspace = true }
 # macOS: a window close quits through `terminate:` (the Touch Bar crash, #1136); elsewhere a no-op.
 craft-quit = { workspace = true, features = ["egui"] }

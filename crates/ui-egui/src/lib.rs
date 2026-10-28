@@ -44,6 +44,7 @@ pub use combine_grid::ThumbState as CombineThumb;
 mod combine_ui;
 pub mod docking;
 pub use combine_ui::{Columns as CombineColumns, CombineView, Lock as CombineLock, SortKey};
+mod api_translation;
 mod camera_ui;
 mod commands;
 mod comment_props;
@@ -257,6 +258,8 @@ pub enum QuickTool {
     MarqueeZoom,
     /// Edit ▸ Take a Snapshot.
     Snapshot,
+    /// Opt-in crop preview for multimodal API translation; never copies to clipboard.
+    TranslateImage,
     /// Edit ▸ Column Select: drag a rectangle to select only the text inside it (#740). The
     /// Select tool does the same while Alt/Option is held at the start of a drag.
     ColumnSelect,
@@ -623,6 +626,7 @@ pub struct RecentFile {
 }
 
 pub struct PdfCraftApp {
+    api_translation: api_translation::State,
     pub docking: docking::Workspace,
     pub(crate) pending_panel_reveals: Vec<docking::Panel>,
     pub session: Session,
@@ -1092,6 +1096,7 @@ pub enum OpenOutcome {
 impl PdfCraftApp {
     pub fn new() -> Self {
         Self {
+            api_translation: Default::default(),
             session: Session::new(),
             views: Vec::new(),
             closed_tabs: Vec::new(),
@@ -1367,11 +1372,8 @@ impl PdfCraftApp {
         let info = self.session.get(view.id).map(|d| &d.info);
         match info.and_then(|i| i.open_dest.filter(|(page, _)| *page < pages).map(|d| (i, d))) {
             Some((info, (page, dest))) if !self.always_default_view => view.go_to_dest(page, dest, info),
-            Some((_, (page, _))) => {
-                if page > 0 {
-                    view.go_to_page(page);
-                }
-            }
+            Some((_, (page, _))) if page > 0 => view.go_to_page(page),
+            Some(_) => {}
             None if v.page > 0 && v.page < pages => view.go_to_page(v.page),
             None => {}
         }
@@ -2883,6 +2885,10 @@ impl PdfCraftApp {
     ///
     /// This is the seed of the UI control channel (M3.9): the same verbs become `ui.set` calls.
     pub fn set_option(&mut self, key: &str, value: &str) -> Result<(), String> {
+        if key == "api_settings" {
+            self.api_translation.settings_open = value == "true";
+            return Ok(());
+        }
         let view = self.active.and_then(|i| self.views.get_mut(i));
         match (key, view) {
             ("language", _) => {
@@ -3143,6 +3149,7 @@ impl PdfCraftApp {
                     "sign" => QuickTool::SignArea { certify: false },
                     "marquee-zoom" => QuickTool::MarqueeZoom,
                     "snapshot" => QuickTool::Snapshot,
+                    "translate-image" => QuickTool::TranslateImage,
                     "column-select" => QuickTool::ColumnSelect,
                     "certify" => QuickTool::SignArea { certify: true },
                     custom if custom.starts_with("custom-stamp-") => {
@@ -3482,6 +3489,7 @@ impl eframe::App for PdfCraftApp {
     /// the quit guard, shortcuts, and the background jobs' results.
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.ctx = Some(ctx.clone());
+        self.poll_api_translation(ctx);
         #[cfg(not(target_arch = "wasm32"))]
         self.window_state.repair(ctx);
         self.dialog_epoch();
@@ -3684,6 +3692,7 @@ impl eframe::App for PdfCraftApp {
                 }
             });
             dialogs::show(self, &ctx);
+            self.api_translation_windows(&ctx);
             // Notices too: a refused field value or a failed save must be seen in full screen.
             self.show_progress(&ctx);
             widgets::toast(self, &ctx);
@@ -3734,6 +3743,7 @@ impl eframe::App for PdfCraftApp {
         self.process_pending_edits();
         palette::show(self, &ctx);
         dialogs::show(self, &ctx);
+        self.api_translation_windows(&ctx);
         self.show_progress(&ctx);
         widgets::toast(self, &ctx);
         self.finish_render_frame(&ctx);

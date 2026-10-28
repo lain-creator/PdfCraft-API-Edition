@@ -1,11 +1,6 @@
-<p align="center">
-  <a href="https://getartcraft.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
-    </picture>
-  </a>
-</p>
+# PDFCraft API Translation Edition
+
+基于上游稳定版 v0.14.0 的本机定制版；支持自定义第三方 API、PDF 文字选区翻译、框选图片识别后翻译、「中译英 / 英译中」弹窗结果和本机 PCB 专业词库。点击翻译才发送内容，不修改原 PDF。详见 [API 翻译说明](docs/local-api-translation.md)。非上游官方发行版；原作者及开源许可保留，按上游要求移除其限制用于改版的商标图案。
 
 
 <p align="center">
@@ -258,11 +253,11 @@ Press <kbd>⌘K</kbd> to search every tool and command, or browse the **All tool
 <table>
 <tr>
 <td width="50%"><img src="docs/images/pdfcraft-palette.png" alt="The command palette searching for 'page', listing Page grid, Page labels, Rotate pages, Insert pages, Delete pages, Extract pages and more, each with the tool it belongs to"></td>
-<td width="50%"><img src="docs/images/pdfcraft-tools.png" alt="The Welcome to PdfCraft home screen with recommended tools, a recent file, a privacy note, and the full tool catalogue in the side panel"></td>
+<td width="50%"><img src="docs/images/pdfcraft-tools.png" alt="The custom API edition's Chinese home screen and tool catalogue, with no personal files"></td>
 </tr>
 <tr>
 <td align="center"><sub>The <kbd>⌘K</kbd> command palette</sub></td>
-<td align="center"><sub>The home screen and the All tools catalogue</sub></td>
+<td align="center"><sub>The custom API edition's Chinese home screen</sub></td>
 </tr>
 </table>
 
@@ -591,7 +586,6 @@ part of this repository and PdfCraft, under [`docs/brand/LICENSE-brand.txt`](doc
 Forks and modified versions must remove them.
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
   <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
 </p>
 

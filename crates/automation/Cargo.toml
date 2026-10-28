@@ -9,6 +9,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+pdfcraft-ai = { workspace = true }
 pdfcraft-engine = { workspace = true }
 pdfcraft-cos = { workspace = true }
 pdfcraft-render = { workspace = true }
@@ -16,6 +17,7 @@ pdfcraft-organize = { workspace = true }
 pdfcraft-platform = { workspace = true }
 serde_json = { workspace = true }
 sha2 = "0.11"
+png = "0.18"
 tempfile = "3.27"
 base64 = { version = "0.22", optional = true }
 

@@ -129,6 +129,8 @@ the shared rule, encryption and Office→PDF are sub-cases and Word export is lo
 
 ## Current focus
 
+Local API Translation Edition (2026-10-28, M13): user-configured endpoint profiles and selected text/cropped-image translation are implemented with a read-only popup and headless equivalents. Crop mode is two explicit calls (vision recognition, then terminology-aware translation). Local synthetic tests cover consent, copying permissions and unchanged documents. General AI summary, cited Q&A, alt text and redaction suggestions remain gaps; upstream scores/estimates are unchanged.
+
 In order. Each item names its entry in [gaps.md](gaps.md).
 
 1. **Convert and share:** Create PDF from Office and a Word export that keeps layout (gap 8, #773).

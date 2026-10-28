@@ -49,6 +49,9 @@ impl PdfCraftApp {
     pub(crate) fn finish_marquee(&mut self, index: usize, done: Marquee) {
         let (page, rect, view_rect) = done;
         match self.quick_tool {
+            QuickTool::TranslateImage => {
+                self.prepare_api_image(index, page, view_rect);
+            }
             QuickTool::MarqueeZoom => {
                 let view = &mut self.views[index];
                 if rect.width() < 6.0 || rect.height() < 6.0 {

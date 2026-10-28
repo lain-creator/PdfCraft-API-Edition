@@ -26,6 +26,28 @@ fn doc() -> Value {
     json!({ "type": "integer", "minimum": 1, "description": "Document id from doc_open or doc_list." })
 }
 
+fn api_schema(send: bool) -> Value {
+    let mut props = json!({
+        "doc":doc(),"page":{"type":"integer","minimum":1},
+        "mode":{"type":"string","enum":["text","image"]},
+        "start":{"type":"integer","minimum":0},"end":{"type":"integer","minimum":1},
+        "rect":{"type":"array","items":{"type":"number"},"minItems":4,"maxItems":4},
+        "rotation":{"type":"integer","enum":[0,90,180,270]}
+    });
+    let mut required = vec!["doc", "page"];
+    if send {
+        if let Some(p) = props.as_object_mut() {
+            p.insert("allow_api_send".into(), json!({"type":"boolean"}));
+            p.insert("direction".into(), json!({"type":"string","enum":["zh_en","en_zh"]}));
+            p.insert("profile".into(),json!({"type":"object","description":"Profile with baseUrl, model, visionModel, protocol, authentication, extraBody, timeoutSeconds, allowHttp. Keys are never read from this object."}));
+            p.insert("api_key_env".into(), json!({"type":"string"}));
+            p.insert("glossary_path".into(), json!({"type":"string"}));
+        }
+        required.extend(["allow_api_send", "direction", "profile"]);
+    }
+    schema(props, &required)
+}
+
 fn pages(what: &str) -> Value {
     json!({ "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 1, "description": format!("1-based page numbers {what}.") })
 }
@@ -121,6 +143,14 @@ pub fn tools() -> Vec<ToolDef> {
     let save_out = json!({ "type": "string", "description": "File to write. Omit to open the result as a new unsaved document instead." });
     let open = json!({ "type": "boolean", "description": "Also open the result as a new document (default: only when out is omitted)." });
     vec![
+        t("api_selection_text","Prepare selected text","Read an exact zero-based glyph range [start,end) on one 1-based page. Requires copy permission. No network and no document changes.")
+            .ro().cmd("api.text")
+            .with(api_schema(false)),
+        t("api_selection_image","Prepare selected image","Render only rect in displayed-page points; mode must be image. Optional transient view rotation 0/90/180/270. Returns a PNG preview, no network or clipboard changes.")
+            .ro().cmd("api.image")
+            .with(api_schema(false)),
+        t("api_translate","Translate a PDF selection via API","Explicit allow_api_send:true required each call. Sends selected text once, or cropped image for OCR plus text/terms for translation (two calls). Uses only supplied profile; api_key_env names a key in process environment. glossary_path is optional and confined by --root. Does not read personal desktop settings or change the PDF. No automatic retry.")
+            .with(api_schema(true)),
         t("doc_batch", "Process files and folders", "Run convert, ocr and/or optimize over files and folders, one file at a time. recursive defaults to false. Preserve paths relative to each selected folder inside out_dir; duplicate inputs run once. Skip unsupported files, links and the output subtree. Existing outputs receive numbered names and are never replaced. Continue after per-file errors unless stop_on_error is true. Return completed/failed/skipped counts and per-file results. Discovery is bounded to 10000 entries and 64 folder levels. Convert must be first; each step can appear once. OCR uses installed models. Optimize uses Reduce File Size settings, optionally overriding target ppi (threshold 1.5 times ppi) and JPEG quality; a larger candidate keeps the original bytes. Sources and open documents are unchanged.")
             .with(schema(json!({
                 "paths": {"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1000},

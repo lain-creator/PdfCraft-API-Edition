@@ -381,6 +381,8 @@ update the numbers.
 
 ### 23. Local AI provider
 
+- **Local API Translation Edition, 2026-10-28:** editable compatible endpoint profiles and opt-in text/crop translation now exist in this fork, with local glossary matching, result popups and headless tools. Only mock-provider behavior is qualified; not a claim of upstream AI feature parity. Summarization, cited Q&A, alt text and redaction suggestions below are still missing.
+
 - **Missing:** the opt-in provider interface (local model or the user's own endpoint) and the
   features on it: summarize, ask with page citations, alternate-text and redaction suggestions.
   Acrobat's AI Assistant is a cloud service and out of scope.

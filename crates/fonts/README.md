@@ -27,6 +27,8 @@ set). Without that variable `CRAFT_FONTS` is empty and everything below copes:
 - `ui_japanese_fonts`: the `Jpan` faces for the interface, BIZ UDPGothic first.
 - `ui_chinese_fonts`: the `Hans` faces for the interface, in manifest order (without one,
   Chinese characters the Japanese faces lack show the replacement glyph).
+  The native API edition explicitly embeds the pinned 16.4 MB Noto Sans CJK SC face;
+  it remains excluded on wasm. All other non-Japanese CJK faces keep the upstream size cap.
 - `ui_cjk_fonts(prefer_hans)`: both in fallback order for the UI language (Chinese group first
   in Chinese mode, so one line never mixes faces with different vertical metrics).
 - `ui_arabic_fonts`: the `Arab` faces for Arabic-script interface text (file names, document
