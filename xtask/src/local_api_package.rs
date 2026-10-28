@@ -21,7 +21,9 @@ pub fn run(args: &[String]) -> Result<()> {
     if archive.exists() {
         bail!("refusing to overwrite {}", archive.display());
     }
-    let staging = output.join(format!(".local-api-package-{}", std::process::id()));
+    // Keep the transient .app out of indexed/synced Documents folders. Such
+    // watchers can reattach Finder metadata between xattr cleanup and signing.
+    let staging = std::env::temp_dir().join(format!("pdfcraft-local-api-package-{}", std::process::id()));
     // create_dir refuses an existing name: cleanup below owns only this newly created tree.
     fs::create_dir(&staging)?;
     let result = (|| -> Result<()> {
