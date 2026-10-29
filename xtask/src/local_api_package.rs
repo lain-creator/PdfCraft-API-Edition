@@ -7,7 +7,7 @@ use std::{
     process::Command,
 };
 pub fn run(args: &[String]) -> Result<()> {
-    let version = args.first().map(String::as_str).unwrap_or("0.14.0-api.20261029.2");
+    let version = args.first().map(String::as_str).unwrap_or("0.14.0-api.20261029.3");
     if args.len() > 1 || version.is_empty() || !version.bytes().all(|c| c.is_ascii_alphanumeric() || b".-".contains(&c)) {
         bail!("expected one safe package version");
     }

@@ -29,6 +29,9 @@ fn mock(status: &str, response: &str) -> Result<MockServer, Box<dyn std::error::
                 Err(e) => return Err(e.to_string()),
             }
         };
+        // Accepted sockets can inherit the listener's nonblocking mode. A
+        // partially arrived request must wait, not return WouldBlock/reset.
+        stream.set_nonblocking(false).map_err(|e| e.to_string())?;
         stream.set_read_timeout(Some(Duration::from_secs(5))).map_err(|e| e.to_string())?;
         let mut bytes = Vec::new();
         let mut chunk = [0u8; 4096];
@@ -54,12 +57,25 @@ fn mock(status: &str, response: &str) -> Result<MockServer, Box<dyn std::error::
                 return Err("test request too big".into());
             }
         }
-        write!(
-            stream,
+        let reply = format!(
             "HTTP/1.1 {status}\r\nContent-Length: {}\r\nLocation: http://127.0.0.1:1/never-follow\r\nConnection: close\r\n\r\n{response}",
             response.len()
-        )
-        .map_err(|e| e.to_string())?;
+        );
+        stream.write_all(reply.as_bytes()).map_err(|e| e.to_string())?;
+        // Close the response half gracefully, then let curl close its side.
+        // Dropping a socket immediately after write_fmt can race the client
+        // and deliver a TCP reset instead of a complete synthetic response.
+        stream.shutdown(std::net::Shutdown::Write).map_err(|e| e.to_string())?;
+        loop {
+            let n = stream.read(&mut chunk).map_err(|e| e.to_string())?;
+            if n == 0 {
+                break;
+            }
+            if bytes.len().saturating_add(n) > 1024 * 1024 {
+                return Err("test request too big".into());
+            }
+            bytes.extend_from_slice(&chunk[..n]);
+        }
         String::from_utf8(bytes).map_err(|e| e.to_string())
     });
     Ok((format!("http://{address}/v1"), worker))
@@ -125,6 +141,34 @@ fn real_transport_sends_bearer_json_and_preserves_unicode() -> TestResult {
     assert!(request.contains("application/json"));
     let payload: Json = serde_json::from_str(request.split_once("\r\n\r\n").ok_or("body")?.1)?;
     assert_eq!(payload["messages"][0]["content"], "synthetic test only");
+    Ok(())
+}
+#[test]
+fn mock_closes_responses_gracefully_under_repeated_requests() -> TestResult {
+    for _ in 0..40 {
+        let (url, worker) = mock("200 OK", r#"{"choices":[{"finish_reason":"stop","message":{"content":"压合结构 lamination structure"}}]}"#)?;
+        let messages = vec![Message { role: "user".into(), content: "中英文混排与叠层 stack-up".repeat(200).into() }];
+        assert_eq!(complete(local_profile(url), messages, &AtomicBool::new(false))?, "压合结构 lamination structure");
+        worker.join().map_err(|_| "server")??;
+    }
+    Ok(())
+}
+#[test]
+fn mock_waits_for_a_fragmented_request_body() -> TestResult {
+    let (url, worker) = mock("200 OK", "synthetic response")?;
+    let address = url.trim_start_matches("http://").trim_end_matches("/v1");
+    let mut stream = std::net::TcpStream::connect(address)?;
+    stream.set_read_timeout(Some(Duration::from_secs(5)))?;
+    let body = "叠层 stack-up; 压合 lamination";
+    let head = format!("POST /v1 HTTP/1.1\r\nHost: test\r\nContent-Length: {}\r\n\r\n", body.len());
+    stream.write_all(head.as_bytes())?;
+    std::thread::sleep(Duration::from_millis(30));
+    stream.write_all(body.as_bytes())?;
+    stream.shutdown(std::net::Shutdown::Write)?;
+    let mut response = String::new();
+    stream.read_to_string(&mut response)?;
+    assert!(response.ends_with("synthetic response"));
+    assert!(worker.join().map_err(|_| "server")??.ends_with(body));
     Ok(())
 }
 #[test]

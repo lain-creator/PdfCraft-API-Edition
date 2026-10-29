@@ -32,7 +32,7 @@ jobs:
       CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
       CRAFT_FONTS_REQUIRED: '1'
       MACOSX_DEPLOYMENT_TARGET: '11.0'
-      PDFCRAFT_BUILD_LABEL: API20261029.2
+      PDFCRAFT_BUILD_LABEL: API20261029.3
       CARGO_PROFILE_RELEASE_LTO: 'false'
       PDFCRAFT_REQUIRE_WINRES: '1'
     steps:
@@ -107,7 +107,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version=0.14.0-api.20261029.2
+          version=0.14.0-api.20261029.3
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then version="${GITHUB_REF_NAME#v}"; fi
           if [[ -n "$REQUESTED_TAG" ]]; then
             [[ "$REQUESTED_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-api\.[0-9.]+$ ]] || exit 1
