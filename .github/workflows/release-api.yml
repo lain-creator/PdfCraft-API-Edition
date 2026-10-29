@@ -34,7 +34,6 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: '11.0'
       PDFCRAFT_BUILD_LABEL: API20261029.2
       CARGO_PROFILE_RELEASE_LTO: 'false'
-      RUSTFLAGS: ${{ matrix.rustflags }}
       PDFCRAFT_REQUIRE_WINRES: '1'
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +60,9 @@ jobs:
           cargo xtask assets
           cargo xtask layers
       - name: Build
+        env:
+          # Static CRT applies only to the target app, not host proc-macros/xtask tests.
+          RUSTFLAGS: ${{ matrix.rustflags }}
         run: cargo build --locked --release -p pdfcraft --target ${{ matrix.target }}
       - name: Package and checksum
         env:
