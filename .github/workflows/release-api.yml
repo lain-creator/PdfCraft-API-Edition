@@ -3,20 +3,43 @@ on:
   push:
     tags: ['v*-api.*']
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing v*-api.* tag to build and publish; blank only builds'
+        required: false
+        type: string
 permissions:
   contents: read
 jobs:
-  macos-arm64:
-    runs-on: macos-15-intel
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15-intel
+            target: aarch64-apple-darwin
+            platform: macos-arm64
+            executable: pdfcraft
+            rustflags: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: win64
+            executable: pdfcraft.exe
+            rustflags: '-C target-feature=+crt-static'
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     env:
       CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
       CRAFT_FONTS_REQUIRED: '1'
       MACOSX_DEPLOYMENT_TARGET: '11.0'
-      PDFCRAFT_BUILD_LABEL: API20261029.1
+      PDFCRAFT_BUILD_LABEL: API20261029.2
       CARGO_PROFILE_RELEASE_LTO: 'false'
+      RUSTFLAGS: ${{ matrix.rustflags }}
+      PDFCRAFT_REQUIRE_WINRES: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
       - uses: actions/checkout@v4
         with:
           repository: storytold/craft-fonts
@@ -24,45 +47,62 @@ jobs:
           path: craft-fonts
       - uses: dtolnay/rust-toolchain@1.95.0
         with:
-          targets: aarch64-apple-darwin
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
-          key: pdfcraft-api-aarch64
+          key: pdfcraft-api-${{ matrix.target }}
       - name: Check built-in terminology and packaging
+        shell: bash
         run: |
+          set -euo pipefail
           cargo fmt --check
           cargo test --locked -p pdfcraft-ai -p xtask
           cargo xtask assets
           cargo xtask layers
       - name: Build
-        run: cargo build --locked --release -p pdfcraft --target aarch64-apple-darwin
+        run: cargo build --locked --release -p pdfcraft --target ${{ matrix.target }}
       - name: Package and checksum
         env:
-          PDFCRAFT_PACKAGE_BINARY: ${{ github.workspace }}/target/aarch64-apple-darwin/release/pdfcraft
+          PDFCRAFT_PACKAGE_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/${{ matrix.executable }}
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        shell: bash
         run: |
           set -euo pipefail
-          version=0.14.0-api.20261029.1
+          version=0.14.0-api.20261029.2
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then version="${GITHUB_REF_NAME#v}"; fi
+          if [[ -n "$REQUESTED_TAG" ]]; then
+            [[ "$REQUESTED_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-api\.[0-9.]+$ ]] || exit 1
+            [[ "$(git rev-parse HEAD)" == "$(git rev-parse "$REQUESTED_TAG^{commit}")" ]]
+            version="${REQUESTED_TAG#v}"
+          fi
           cargo xtask local-api-package "$version"
-          git archive --format=zip --prefix=PdfCraft-API-source/ HEAD --output "dist/PdfCraft-${version}-source.zip"
-          (cd dist && shasum -a 256 *.zip > SHA256SUMS.txt && shasum -a 256 -c SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: PdfCraft-API-macos-arm64
+          name: PdfCraft-API-${{ matrix.platform }}
           path: dist/*
   publish:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: macos-arm64
+    if: startsWith(github.ref, 'refs/tags/') || inputs.release_tag != ''
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
       - uses: actions/download-artifact@v4
         with:
-          name: PdfCraft-API-macos-arm64
           path: dist
+          merge-multiple: true
+      - name: Source and checksums
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          git archive --format=zip --prefix=PdfCraft-API-source/ HEAD --output "dist/PdfCraft-${RELEASE_TAG#v}-source.zip"
+          (cd dist && sha256sum *.zip > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
       - name: Publish independent API Edition
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --latest --title "PDFCraft API Edition · ${GITHUB_REF_NAME#v}" --notes-file RELEASE-NOTES.md dist/*.zip dist/SHA256SUMS.txt
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: gh release create "$RELEASE_TAG" --verify-tag --latest --title "PDFCraft API Edition · ${RELEASE_TAG#v}" --notes-file RELEASE-NOTES.md dist/*.zip dist/SHA256SUMS.txt

@@ -284,9 +284,12 @@ impl PdfCraftApp {
         let mut direction = None;
         let state = &mut self.api_translation;
         egui::Window::new("PDF API 翻译")
-            .id(egui::Id::new("pdf_api_result"))
+            .id(egui::Id::new("pdf_api_result_v2"))
             .open(&mut open)
-            .default_size(egui::vec2(720.0, 600.0))
+            .default_size(egui::vec2(1000.0, 720.0).min(ctx.content_rect().size() - egui::vec2(40.0, 70.0)))
+            .min_size(egui::vec2(360.0, 260.0).min(ctx.content_rect().size() * 0.7))
+            .max_size((ctx.content_rect().size() - egui::vec2(40.0, 70.0)).max(egui::vec2(1.0, 1.0)))
+            .constrain_to(ctx.content_rect())
             .resizable(true)
             .collapsible(true)
             .vscroll(true)
@@ -298,7 +301,7 @@ impl PdfCraftApp {
                     ui.label("图片模式: 先视觉识别，再按匹配术语翻译，共两次 API；仅发送裁剪图，不上传整份 PDF。");
                     ui.small("裁剪图最高 144 dpi，长边 2048 像素；小字不清晰时请缩小框选区域。");
                     if let Some(preview) = &state.preview {
-                        ui.add(egui::Image::new(preview).max_size(egui::vec2(660.0, 220.0)));
+                        ui.add(egui::Image::new(preview).max_size(egui::vec2(ui.available_width(), 300.0)));
                     }
                 }
                 ui.horizontal(|ui| {
@@ -356,10 +359,12 @@ impl PdfCraftApp {
         let mut save = false;
         let mut refresh = false;
         egui::Window::new("PDF API 设置")
-            .id(egui::Id::new("pdf_api_settings"))
+            .id(egui::Id::new("pdf_api_settings_v2"))
             .open(&mut open)
-            .default_width(620.0)
-            .default_height(680.0)
+            .default_size(egui::vec2(800.0, 720.0).min(ctx.content_rect().size() - egui::vec2(40.0, 70.0)))
+            .min_size(egui::vec2(360.0, 260.0).min(ctx.content_rect().size() * 0.7))
+            .max_size((ctx.content_rect().size() - egui::vec2(40.0, 70.0)).max(egui::vec2(1.0, 1.0)))
+            .constrain_to(ctx.content_rect())
             .resizable(true)
             .vscroll(true)
             .show(ctx, |ui| {
@@ -483,6 +488,8 @@ mod tests {
             });
             h.run_steps(8);
             h.get_by_label("复制译文");
+            let bounds = h.get_by_label("PDF API 翻译").rect();
+            assert!(bounds.width() >= 950.0, "the translation window must open wide: {bounds:?}");
             h.get_by_label("压合结构: 芯板厚度 1.6mm。");
             assert!(h.state().api_translation.result.is_some());
             assert!(h.state().api_translation.job.is_none());
@@ -494,6 +501,23 @@ mod tests {
                 h.render().unwrap().save(std::path::Path::new(&dir).join(format!("{name}.png"))).unwrap();
             }
         }
+    }
+    #[test]
+    fn translation_window_stays_inside_a_small_screen() {
+        let mut h = Harness::builder().with_size(egui::vec2(800.0, 600.0)).build_eframe(|_| {
+            let mut app = PdfCraftApp::new();
+            app.api_translation.loaded = true;
+            app.api_translation.open = true;
+            app.api_translation.source = Some(Source::Text("Synthetic PCB text".into()));
+            app
+        });
+        h.run_steps(8);
+        let rect = h.get_by_label("PDF API 翻译").rect();
+        assert!(rect.width() <= 800.0 && rect.height() <= 600.0, "{rect:?}");
+        assert!(rect.min.x >= 0.0 && rect.min.y >= 0.0, "{rect:?}");
+        h.get_by_label("中译英");
+        h.get_by_label("英译中");
+        assert!(h.state().api_translation.job.is_none());
     }
     #[test]
     fn switching_document_cancels_waiting_and_keeps_profile_without_sending() {

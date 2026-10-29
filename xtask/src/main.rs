@@ -18,7 +18,7 @@ type Command = fn(&[String]) -> anyhow::Result<()>;
 
 /// Every subcommand: name, one-line summary, entry point.
 const COMMANDS: &[(&str, &str, Command)] = &[
-    ("local-api-package", "Package the local API edition as an ad-hoc-signed Mac arm64 ZIP (no personal settings)", local_api_package::run),
+    ("local-api-package", "Package the API edition as a Mac arm64 or Windows x64 ZIP (no personal settings)", local_api_package::run),
     ("version", "Print the workspace version, or `version set X.Y.Z[-pre]` to change it and refresh Cargo.lock", version_cmd),
     ("layers", "Enforce the crate dependency layering (plan/architecture.md §3)", gates::layers),
     ("wasm", "cargo check --target wasm32-unknown-unknown for every crate below L8, in one call", gates::wasm),
