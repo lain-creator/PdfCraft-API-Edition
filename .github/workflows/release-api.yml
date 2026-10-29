@@ -35,7 +35,6 @@ jobs:
       PDFCRAFT_BUILD_LABEL: API20261029.2
       CARGO_PROFILE_RELEASE_LTO: 'false'
       PDFCRAFT_REQUIRE_WINRES: '1'
-      PDFCRAFT_MODELS_DIR: ${{ runner.temp }}/pdfcraft-pinned-ocr
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,11 +51,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: pdfcraft-api-${{ matrix.target }}
-          save-if: ${{ !cancelled() }}
+          save-if: 'true'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - name: Prepare hash-verified offline OCR resources
+        env:
+          PDFCRAFT_MODELS_DIR: ${{ runner.temp }}/pdfcraft-pinned-ocr
         shell: bash
         run: |
           set -euo pipefail
@@ -101,6 +102,7 @@ jobs:
       - name: Package and checksum
         env:
           PDFCRAFT_PACKAGE_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/${{ matrix.executable }}
+          PDFCRAFT_MODELS_DIR: ${{ runner.temp }}/pdfcraft-pinned-ocr
           REQUESTED_TAG: ${{ inputs.release_tag }}
         shell: bash
         run: |
