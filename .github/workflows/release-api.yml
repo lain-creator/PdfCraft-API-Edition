@@ -35,6 +35,7 @@ jobs:
       PDFCRAFT_BUILD_LABEL: API20261029.2
       CARGO_PROFILE_RELEASE_LTO: 'false'
       PDFCRAFT_REQUIRE_WINRES: '1'
+      PDFCRAFT_MODELS_DIR: ${{ runner.temp }}/pdfcraft-pinned-ocr
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +52,39 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: pdfcraft-api-${{ matrix.target }}
+          save-if: ${{ !cancelled() }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Prepare hash-verified offline OCR resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, io, os, pathlib, tomllib, urllib.request, zipfile
+          # Reuse only the already-public, licensed OCR resources. Never run the
+          # old application. The archive AND each model/license are hash pinned.
+          url = 'https://github.com/lain-creator/PdfCraft-API-Edition/releases/download/v0.14.0-api.20261029.1/PdfCraft-0.14.0-api.20261029.1-macos-arm64.zip'
+          with urllib.request.urlopen(url, timeout=120) as response:
+              payload = response.read((100 << 20) + 1)
+          assert len(payload) <= 100 << 20, 'OCR resource archive exceeds limit'
+          assert hashlib.sha256(payload).hexdigest() == 'a3188025fddcbf7c0574a45a0cc2f59479363e7b2f5bdf2c5b1bae30a6bb3e68', 'OCR resource archive hash mismatch'
+          manifest = tomllib.loads(pathlib.Path('ATTRIBUTION.toml').read_text(encoding='utf-8'))
+          output = pathlib.Path(os.environ['PDFCRAFT_MODELS_DIR'])
+          output.mkdir(exist_ok=False)
+          with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+              for model in manifest['fetched']:
+                  if model['kind'] != 'model':
+                      continue
+                  for name, digest in ((model['file'], model['sha256']), (model['file'] + '.LICENCE.txt', model['licence_sha256'])):
+                      assert pathlib.PurePosixPath(name).name == name, 'Invalid model filename'
+                      entry = archive.getinfo('PdfCraft.app/Contents/Resources/models/' + name)
+                      assert entry.file_size <= 64 << 20, 'OCR resource exceeds limit'
+                      data = archive.read(entry)
+                      assert hashlib.sha256(data).hexdigest() == digest, 'OCR model/license hash mismatch: ' + name
+                      (output / name).write_bytes(data)
+          print('Verified pinned OCR models and licenses; no previous application is used.')
+          PY
       - name: Check built-in terminology and packaging
         shell: bash
         run: |
