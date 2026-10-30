@@ -36,10 +36,10 @@ jobs:
       CARGO_PROFILE_RELEASE_LTO: 'false'
       PDFCRAFT_REQUIRE_WINRES: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag || github.ref }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: storytold/craft-fonts
           ref: aced4137c022f1f587624d48e81ec77e1914a9cc
@@ -52,7 +52,7 @@ jobs:
         with:
           key: pdfcraft-api-${{ matrix.target }}
           save-if: 'true'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - name: Prepare hash-verified offline OCR resources
@@ -124,7 +124,7 @@ jobs:
             version="${REQUESTED_TAG#v}"
           fi
           cargo xtask local-api-package "$version"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: PdfCraft-API-${{ matrix.platform }}
           path: dist/*
@@ -135,10 +135,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag || github.ref }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
