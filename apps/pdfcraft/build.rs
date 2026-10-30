@@ -9,7 +9,12 @@
 #[path = "src/windows_manifest.rs"]
 mod windows_manifest;
 
+#[path = "../../packaging/windows/optional_pdf_link.rs"]
+mod optional_pdf_link;
+
 fn main() {
+    println!("cargo:rerun-if-changed=../../packaging/windows/optional_pdf_link.rs");
+    optional_pdf_link::configure();
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=../../assets/app-icon/pdfcraft.ico");
     println!("cargo:rerun-if-changed=../../assets/app-icon/pdfcraft-document.ico");

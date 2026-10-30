@@ -1,5 +1,7 @@
 # PdfCraft roadmap: milestones and what's next
 
+> **API-WIN.1 · 2026-10-30:** optional Windows PDF printing is delay-loaded with safe system-directory/export preflight; missing components return print-only errors. PE/CRT and Windows shadow-DLL startup release gates added. Target-user desktop and hardware printing unverified; readiness estimates unchanged.
+
 > **Last reviewed:** 2026-10-23 | **Last updated:** 2026-10-23 | **Change:** minor (M8, #3205 follow-up: labelled Italian international phone numbers with a slash match whole; estimates unchanged)
 > **Last reviewed:** 2026-10-23 · **Last updated:** 2026-10-23 · **Change:** minor (M7, #2636 partial: pasting added text boxes and images in the engine and through `content_copy`; estimates unchanged)
 > **Last reviewed:** 2026-10-23 · **Last updated:** 2026-10-23 · **Change:** minor (M11: image optimization accounts for page-local UserUnit; estimates unchanged)

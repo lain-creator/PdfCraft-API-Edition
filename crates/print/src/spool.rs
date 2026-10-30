@@ -3,8 +3,13 @@
 
 pub use craft_print::{
     Duplex, HANDLED_OPTIONS, HAS_PRINTER_PREFERENCES, Job, Printer, PrinterOption, Scaling, lp_args, lpstat_command, parse_lpoptions, parse_lpstat,
-    parse_lpstat_e, parse_ppd, parse_windows_printers, ppd_text, printers, printers_parsed,
+    parse_lpstat_e, parse_ppd, parse_windows_printers, ppd_text, printers_parsed,
 };
+
+/// Optional Windows print components must not terminate printer discovery.
+pub fn printers() -> Vec<Printer> {
+    crate::windows_pdf::run(|| Ok(craft_print::printers())).unwrap_or_default()
+}
 
 /// The driver's job options for a printer (CUPS: its PPD, with the queue's current defaults);
 /// empty when it has none or on other platforms. Reads files and runs `lpoptions`, so call it
@@ -24,7 +29,7 @@ pub fn printer_options_in(printer: &str, lang: &str) -> Vec<PrinterOption> {
     #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
     {
         let _ = lang;
-        craft_print::printer_options(printer)
+        crate::windows_pdf::run(|| Ok(craft_print::printer_options(printer))).unwrap_or_default()
     }
 }
 
@@ -144,17 +149,17 @@ pub(crate) fn printer_options_via_within(
 }
 
 pub fn submit(pdf: &[u8], job: &Job) -> Result<String, crate::PrintError> {
-    craft_print::submit(pdf, job).map_err(|e| crate::PrintError::Spool(e.to_string()))
+    crate::windows_pdf::run(|| craft_print::submit(pdf, job).map_err(|e| e.to_string())).map_err(crate::PrintError::Spool)
 }
 
 /// [`submit`], told `(sent, sheets)` as each sheet reaches the spooler (Windows; CUPS takes the
 /// whole PDF at once and reports nothing).
 pub fn submit_with_progress(pdf: &[u8], job: &Job, progress: &mut dyn FnMut(usize, usize)) -> Result<String, crate::PrintError> {
-    craft_print::submit_with_progress(pdf, job, progress).map_err(|e| crate::PrintError::Spool(e.to_string()))
+    crate::windows_pdf::run(|| craft_print::submit_with_progress(pdf, job, progress).map_err(|e| e.to_string())).map_err(crate::PrintError::Spool)
 }
 
 pub fn open_printer_preferences(printer: &str) -> Result<(), crate::PrintError> {
-    craft_print::open_printer_preferences(printer).map_err(|e| crate::PrintError::Spool(e.to_string()))
+    crate::windows_pdf::run(|| craft_print::open_printer_preferences(printer).map_err(|e| e.to_string())).map_err(crate::PrintError::Spool)
 }
 
 /// The PPD language codes (`*cupsLanguages`, the `ll` of `*ll.Translation`) to try for a UI

@@ -32,7 +32,7 @@ jobs:
       CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
       CRAFT_FONTS_REQUIRED: '1'
       MACOSX_DEPLOYMENT_TARGET: '11.0'
-      PDFCRAFT_BUILD_LABEL: API20261029.3
+      PDFCRAFT_BUILD_LABEL: API20261030.1
       CARGO_PROFILE_RELEASE_LTO: 'false'
       PDFCRAFT_REQUIRE_WINRES: '1'
     steps:
@@ -91,6 +91,7 @@ jobs:
         run: |
           set -euo pipefail
           cargo fmt --check
+          python -m unittest discover -s packaging/windows -p 'test_optional_pdf.py' -v
           cargo test --locked -p pdfcraft-ai -p xtask
           cargo xtask assets
           cargo xtask layers
@@ -98,7 +99,15 @@ jobs:
         env:
           # Static CRT applies only to the target app, not host proc-macros/xtask tests.
           RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo build --locked --release -p pdfcraft --target ${{ matrix.target }}
+        run: cargo build --locked --release -p pdfcraft -p pdfcraft-cli --target ${{ matrix.target }}
+      - name: Windows optional printing regression tests
+        if: matrix.platform == 'win64'
+        run: cargo test --locked -p pdfcraft-print --target ${{ matrix.target }} windows_pdf::tests
+      - name: Verify Windows startup without a usable local PDF DLL
+        if: matrix.platform == 'win64'
+        run: |
+          python packaging/windows/check_optional_pdf.py target/${{ matrix.target }}/release/pdfcraft.exe --smoke
+          python packaging/windows/check_optional_pdf.py target/${{ matrix.target }}/release/pdfcraft-cli.exe --smoke
       - name: Package and checksum
         env:
           PDFCRAFT_PACKAGE_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/${{ matrix.executable }}
@@ -107,7 +116,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version=0.14.0-api.20261029.3
+          version=0.14.0-api.20261030.1
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then version="${GITHUB_REF_NAME#v}"; fi
           if [[ -n "$REQUESTED_TAG" ]]; then
             [[ "$REQUESTED_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-api\.[0-9.]+$ ]] || exit 1

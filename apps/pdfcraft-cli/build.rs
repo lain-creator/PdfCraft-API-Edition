@@ -6,7 +6,12 @@
 //! cross-compile from macOS or Linux still links, unless `PDFCRAFT_REQUIRE_WINRES=1` turns it
 //! into an error (for release builds).
 
+#[path = "../../packaging/windows/optional_pdf_link.rs"]
+mod optional_pdf_link;
+
 fn main() {
+    println!("cargo:rerun-if-changed=../../packaging/windows/optional_pdf_link.rs");
+    optional_pdf_link::configure();
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=PDFCRAFT_REQUIRE_WINRES");
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {

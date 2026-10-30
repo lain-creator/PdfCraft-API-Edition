@@ -1,5 +1,7 @@
 # PdfCraft roadmap
 
+> **API-WIN.1 · 2026-10-30:** optional Windows PDF printing is delay-loaded with safe system-directory/export preflight; missing components return print-only errors. PE/CRT and Windows shadow-DLL startup release gates added. Target-user desktop and hardware printing unverified; readiness estimates unchanged.
+
 > **API-UI.2 · 2026-10-29:** larger resizable translation/API windows, viewport constraints, unified 中译英 / 英译中 directions, and Windows x64 API packaging. Synthetic/mock tests only; upstream parity estimates unchanged.
 
 > **Local API edition update: 2026-10-29** · 798 curated public PCB pairs, including user-authorized personal PCB terms, are embedded in binaries and public packages. Clean installs need no imported glossary; local additions remain separate and are merged in memory. No change to upstream parity estimates. See [public glossary](docs/local-public-pcb-glossary.md).

@@ -1,5 +1,7 @@
 # PDFCraft API Translation Edition
 
+Windows 启动修复版：`0.14.0-api.20261030.1`。缺少 windows.data.pdf.dll 不再阻止启动，仅打印时检测系统组件；文档和 AI 翻译不受影响。不捆绑系统 DLL，不承诺 Windows 7/8 或所有精简系统支持。
+
 基于上游稳定版 v0.14.0 的独立 API 专业词汇版；支持自定义第三方 API、PDF 文字选区翻译、框选图片识别后翻译和「中译英 / 英译中」弹窗结果。内置 798 条 PCB 术语，包含用户授权公开的个人 PCB 补充词汇，无需手动导入。点击翻译才发送内容，不修改原 PDF。详见 [API 翻译说明](docs/local-api-translation.md)。非上游官方发行版；原作者及开源许可保留，按上游要求移除其限制用于改版的商标图案。
 
 [下载 API 专业词汇版](https://github.com/lain-creator/PdfCraft-API-Edition/releases/latest) · [公共词库说明](docs/local-public-pcb-glossary.md)。`0.14.0-api.20261029.3` 提供 Apple Silicon Mac arm64 和 Windows 10/11 x64 ZIP。Windows 完整解压后运行 PdfCraft.exe；设置保存在用户目录，未包含 API Key。翻译窗默认约 1000×720，可缩放、折叠，小屏自适应，按钮统一“中译英／英译中”。未发布 Intel Mac 包；Windows 未做桌面实机测试。

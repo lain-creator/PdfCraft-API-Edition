@@ -15,5 +15,9 @@ pdfcraft-content = { workspace = true }
 pdfcraft-model = { workspace = true }
 thiserror = { workspace = true }
 
+[target.'cfg(windows)'.dependencies]
+# Safe loading and export checks for the optional system PDF print component.
+winsafe = { version = "0.0.29", default-features = false, features = ["kernel"] }
+
 [dev-dependencies]
 pdfcraft-render = { workspace = true }

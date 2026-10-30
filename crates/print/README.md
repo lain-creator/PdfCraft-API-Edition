@@ -1,5 +1,18 @@
 # pdfcraft-print
 
+API-WIN.1 (2026-10-30): Windows MSVC GUI/CLI delay-load `windows.data.pdf.dll`.
+The spool facade checks the system-directory DLL and `PdfCreateRenderer` before submission,
+holding the module through the call. Missing/broken components return a print-only error.
+Release gates inspect actual PE imports and run `--version` with an invalid local shadow DLL.
+No system DLL is redistributed. This does not claim Windows 7/8 or all stripped-image support.
+Both `windows.data.pdf.dll` and PrintTicket's `prntvpt.dll` are delayed; discovery,
+driver options/preferences and submission are guarded. Related upstream reports:
+[2360](https://github.com/storytold/pdfcraft/issues/2360),
+[2630](https://github.com/storytold/pdfcraft/issues/2630) and the reviewed open
+[2701](https://github.com/storytold/pdfcraft/pull/2701). This fork additionally loads
+from the native system directory with safe wrappers and checks required exports,
+instead of trusting environment variables or file existence.
+
 Layer L4: printing (execution plan M10.5).
 
 ```rust

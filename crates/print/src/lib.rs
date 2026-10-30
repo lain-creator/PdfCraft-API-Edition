@@ -24,6 +24,7 @@ pub mod range;
 pub mod spool;
 #[cfg(test)]
 mod tests;
+mod windows_pdf;
 
 pub use range::{Subset, select_listed, select_pages};
 
